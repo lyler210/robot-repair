@@ -2,66 +2,78 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-   	// Public variables
-   	public float speed;
-   	public bool vertical;
-   	public float changeTime = 3.0f;
-    Animator animator;
-  
-   	// Private variables
-    Rigidbody2D rigidbody2d;
-   	float timer;
-   	int direction = 1;
+	// Public variables
+	public float speed;
+	public bool vertical;
+	public float changeTime = 3.0f;
+	Animator animator;
+	bool broken = true;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+	// Private variables
+	Rigidbody2D rigidbody2d;
+	float timer;
+	int direction = 1;
 
-    void Start()
-    {
-        rigidbody2d = GetComponent<Rigidbody2D>();
-        timer = changeTime;
-        animator = GetComponent<Animator>();
-   	}
+	// Start is called once before the first execution of Update after the MonoBehaviour is created
 
-   	// Update is called every frame
-   	void Update()
-   	{
-       	timer-= Time.deltaTime;
+	void Start()
+	{
+		rigidbody2d = GetComponent<Rigidbody2D>();
+		timer = changeTime;
+		animator = GetComponent<Animator>();
+	}
 
-      		if (timer < 0)
-      		{
-        		direction = -direction;
-        		timer = changeTime;
-      		}
-   	}
+	// Update is called every frame
+	void Update()
+	{
+		timer -= Time.deltaTime;
 
-  	// FixedUpdate has the same call rate as the physics system
-  	void FixedUpdate()
-  	{    
-       	Vector2 position = rigidbody2d.position;
+		if (timer < 0)
+		{
+			direction = -direction;
+			timer = changeTime;
+		}
+	}
 
-        if (vertical)
-        {
-            position.y = position.y + speed * direction * Time.deltaTime;
-            animator.SetFloat("Move X", 0);
-            animator.SetFloat("Move Y", direction);
-        }
-        else
-        {
-            position.x = position.x + speed * direction * Time.deltaTime;
-            animator.SetFloat("Move X", direction);
-            animator.SetFloat("Move Y", 0);
-        }
+	// FixedUpdate has the same call rate as the physics system
+	void FixedUpdate()
+	{
+		if (!broken)
+		{
+			return;
+		}
+		Vector2 position = rigidbody2d.position;
 
-       	rigidbody2d.MovePosition(position);
-  	}
+		if (vertical)
+		{
+			position.y = position.y + speed * direction * Time.deltaTime;
+			animator.SetFloat("Move X", 0);
+			animator.SetFloat("Move Y", direction);
+		}
+		else
+		{
+			position.x = position.x + speed * direction * Time.deltaTime;
+			animator.SetFloat("Move X", direction);
+			animator.SetFloat("Move Y", 0);
+		}
 
-   	void OnTriggerEnter2D(Collider2D other)
-   	{
-       	PlayerController player = other.gameObject.GetComponent<PlayerController>();
+		rigidbody2d.MovePosition(position);
+	}
 
-       	if (player != null)
-       	{
-           		player.ChangeHealth(-1);
-       	}
-   	}
+	void OnTriggerEnter2D(Collider2D other)
+	{
+		PlayerController player = other.gameObject.GetComponent<PlayerController>();
+
+		if (player != null)
+		{
+			player.ChangeHealth(-1);
+		}
+	}
+
+	public void Fix()
+	{
+		broken = false;
+		rigidbody2d.simulated = false;
+		animator.SetTrigger("Fixed");
+	}
 }
