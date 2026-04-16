@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     // Variables related to animation
     Animator animator;
     Vector2 moveDirection = new Vector2(1, 0);
+    public InputAction TalkAction;
 
     // Variables related to projectiles
     public GameObject projectilePrefab;
@@ -36,6 +37,7 @@ public class PlayerController : MonoBehaviour
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
         LaunchAction.Enable();
+        TalkAction.Enable();
     }
 
     // Update is called once per frame
@@ -65,6 +67,12 @@ public class PlayerController : MonoBehaviour
         {
             Launch();
         }
+
+        RaycastHit2D hit = Physics2D.Raycast(rigidbody2d.position + Vector2.up * 0.2f, moveDirection, 1.5f, LayerMask.GetMask("NPC"));
+        if (hit.collider != null)
+        {
+            FindFriend();
+        }
     }
 
     // FixedUpdate has the same call rate as the physics system
@@ -88,7 +96,7 @@ public class PlayerController : MonoBehaviour
         }
 
         currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-        Debug.Log(currentHealth + "/" + maxHealth);
+        UIHandler.instance.SetHealthValue(currentHealth / (float)maxHealth);
     }
 
     void Launch()
@@ -97,5 +105,13 @@ public class PlayerController : MonoBehaviour
         Projectile projectile = projectileObject.GetComponent<Projectile>();
         projectile.Launch(moveDirection, 300);
         animator.SetTrigger("Launch");
+    }
+
+    void FindFriend()
+    {
+        if (TalkAction.WasPressedThisFrame())
+        {
+            UIHandler.instance.DisplayDialogue();
+	    }
     }
 }
