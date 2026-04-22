@@ -178,6 +178,15 @@ MonoBehaviour:
       m_Action: Launch
       m_Flags: 0
     m_Flags: 0
+  TalkAction:
+    m_Name: Talk
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 896270d4-5df9-4edb-9189-d1521c3c3783
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
 --- !u!50 &-5553491508969429712
 Rigidbody2D:
   serializedVersion: 5

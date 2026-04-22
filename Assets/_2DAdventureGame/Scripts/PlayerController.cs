@@ -1,13 +1,17 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System;
+
 
 public class PlayerController : MonoBehaviour
 {
+
     // Variables related to player character movement
     public InputAction MoveAction;
     Rigidbody2D rigidbody2d;
     Vector2 move;
     public float speed = 3.0f;
+    public event Action OnTalkedToNPC;
 
     // Variables related to the health system
     public int maxHealth = 5;
@@ -19,37 +23,42 @@ public class PlayerController : MonoBehaviour
     bool isInvincible;
     float damageCooldown;
 
-    // Variables related to animation
+    // Variables related to Animation
     Animator animator;
     Vector2 moveDirection = new Vector2(1, 0);
-    public InputAction TalkAction;
 
-    // Variables related to projectiles
+    // Variables related to Projectile 
     public GameObject projectilePrefab;
     public InputAction LaunchAction;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // Variables related to NPC
+    private NonPlayerCharacter lastNonPlayerCharacter;
+    public InputAction TalkAction;
+    bool talkActionHandled = false;
+
+    AudioSource audioSource;
 
     void Start()
     {
         MoveAction.Enable();
+        LaunchAction.Enable();
+        TalkAction.Enable();
         rigidbody2d = GetComponent<Rigidbody2D>();
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
-        LaunchAction.Enable();
-        TalkAction.Enable();
+        audioSource = GetComponent<AudioSource>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         move = MoveAction.ReadValue<Vector2>();
-        //Debug.Log(move);
+
         if (!Mathf.Approximately(move.x, 0.0f) || !Mathf.Approximately(move.y, 0.0f))
         {
             moveDirection.Set(move.x, move.y);
             moveDirection.Normalize();
         }
+
         animator.SetFloat("Look X", moveDirection.x);
         animator.SetFloat("Look Y", moveDirection.y);
         animator.SetFloat("Speed", move.magnitude);
@@ -68,14 +77,31 @@ public class PlayerController : MonoBehaviour
             Launch();
         }
 
+        if (!TalkAction.IsPressed()) talkActionHandled = false;
+
+        // NPC raycast detection
         RaycastHit2D hit = Physics2D.Raycast(rigidbody2d.position + Vector2.up * 0.2f, moveDirection, 1.5f, LayerMask.GetMask("NPC"));
         if (hit.collider != null)
         {
-            FindFriend();
+            NonPlayerCharacter npc = hit.collider.GetComponent<NonPlayerCharacter>();
+            npc.dialogueBubble.SetActive(true);
+            lastNonPlayerCharacter = npc;
+            if (TalkAction.IsPressed() && !talkActionHandled)
+            {
+                talkActionHandled = true;
+                OnTalkedToNPC?.Invoke();
+            }
+        }
+        else
+        {
+            if (lastNonPlayerCharacter != null)
+            {
+                lastNonPlayerCharacter.dialogueBubble.SetActive(false);
+                lastNonPlayerCharacter = null;
+            }
         }
     }
 
-    // FixedUpdate has the same call rate as the physics system
     void FixedUpdate()
     {
         Vector2 position = (Vector2)rigidbody2d.position + move * speed * Time.deltaTime;
@@ -94,7 +120,6 @@ public class PlayerController : MonoBehaviour
             damageCooldown = timeInvincible;
             animator.SetTrigger("Hit");
         }
-
         currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
         UIHandler.instance.SetHealthValue(currentHealth / (float)maxHealth);
     }
@@ -107,11 +132,8 @@ public class PlayerController : MonoBehaviour
         animator.SetTrigger("Launch");
     }
 
-    void FindFriend()
+    public void PlaySound(AudioClip clip)
     {
-        if (TalkAction.WasPressedThisFrame())
-        {
-            UIHandler.instance.DisplayDialogue();
-	    }
+        audioSource.PlayOneShot(clip);
     }
 }

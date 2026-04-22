@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class EnemyController : MonoBehaviour
 {
@@ -8,11 +9,16 @@ public class EnemyController : MonoBehaviour
 	public float changeTime = 3.0f;
 	Animator animator;
 	bool broken = true;
+	public bool isBroken { get { return broken; }}
+	public ParticleSystem smokeParticleEffect;
+	public event Action OnFixed;
+
 
 	// Private variables
 	Rigidbody2D rigidbody2d;
 	float timer;
 	int direction = 1;
+	
 
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
 
@@ -75,5 +81,7 @@ public class EnemyController : MonoBehaviour
 		broken = false;
 		rigidbody2d.simulated = false;
 		animator.SetTrigger("Fixed");
+		smokeParticleEffect.Stop();
+		OnFixed?.Invoke();
 	}
 }

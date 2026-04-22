@@ -1,21 +1,27 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-
 public class UIHandler : MonoBehaviour
 {
-    public static UIHandler instance { get; private set; }
     private VisualElement m_Healthbar;
+    public static UIHandler instance { get; private set; }
+    private Label m_RobotCounter;
+
+    // UI dialogue window variables
     public float displayTime = 4.0f;
     private VisualElement m_NonPlayerDialogue;
     private float m_TimerDisplay;
 
-    private void Awake()
+    private VisualElement m_WinScreen;
+    private VisualElement m_LoseScreen;
+
+    // Awake is called when the script instance is being loaded (in this situation, when the game scene loads)
+    void Awake()
     {
         instance = this;
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // Start is called once before the first execution of Update after the MonoBehaviour is created 
     void Start()
     {
         UIDocument uiDocument = GetComponent<UIDocument>();
@@ -24,11 +30,15 @@ public class UIHandler : MonoBehaviour
         m_NonPlayerDialogue = uiDocument.rootVisualElement.Q<VisualElement>("NPCDialogue");
         m_NonPlayerDialogue.style.display = DisplayStyle.None;
         m_TimerDisplay = -1.0f;
+        m_LoseScreen = uiDocument.rootVisualElement.Q<VisualElement>("LoseScreenContainer");
+        m_WinScreen = uiDocument.rootVisualElement.Q<VisualElement>("WinScreenContainer");
+        m_RobotCounter = uiDocument.rootVisualElement.Q<TemplateContainer>().Q<Label>("CounterLabel");
     }
 
     public void SetHealthValue(float percentage)
     {
         m_Healthbar.style.width = Length.Percent(100 * percentage);
+
     }
 
     private void Update()
@@ -47,5 +57,25 @@ public class UIHandler : MonoBehaviour
     {
         m_NonPlayerDialogue.style.display = DisplayStyle.Flex;
         m_TimerDisplay = displayTime;
+    }
+
+    public void DisplayWinScreen()
+    {
+        m_WinScreen.style.opacity = 1.0f;
+    }
+
+    public void DisplayLoseScreen()
+    {
+        m_LoseScreen.style.opacity = 1.0f;
+    }
+    
+    public void SetCounter(int current, int enemies)
+    {
+    if (m_RobotCounter == null)
+    {
+        Debug.LogError("m_RobotCounter is null! Check the label name in UI Builder.");
+        return;
+    }
+    m_RobotCounter.text = $"{current} / {enemies}";
     }
 }
